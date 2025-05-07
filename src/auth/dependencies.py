@@ -1,31 +1,21 @@
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from pydantic import UUID4
+from typing import Any
+from src.auth.exceptions import InvalidCredentials
+from src.config import auth_settings  
 
-async def valid_post_id(post_id: UUID4) -> dict[str, Any]:
-    post = await service.get_by_id(post_id)
-    if not post:
-        raise PostNotFound()
-
-    return post
-
+http_bearer = HTTPBearer()
 
 async def parse_jwt_data(
-    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/token"))
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer)
 ) -> dict[str, Any]:
+    token = credentials.credentials  
     try:
-        payload = jwt.decode(token, "JWT_SECRET", algorithms=["HS256"])
+        payload = jwt.decode(token, auth_settings.JWT_SECRET, algorithms=[auth_settings.JWT_ALG])
     except JWTError:
         raise InvalidCredentials()
 
     return {"user_id": payload["id"]}
 
 
-async def valid_owned_post(
-    post: dict[str, Any] = Depends(valid_post_id), 
-    token_data: dict[str, Any] = Depends(parse_jwt_data),
-) -> dict[str, Any]:
-    if post["creator_id"] != token_data["user_id"]:
-        raise UserNotOwner()
-
-    return post

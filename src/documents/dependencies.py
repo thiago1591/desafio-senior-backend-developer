@@ -1,30 +1,28 @@
-# dependencies.py
-
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from . import service
-from .exceptions import DocumentNotFound, InvalidCredentials, UserNotOwner
+from .exceptions import InvalidCredentials, UserNotOwner
 from typing import Any
-from pydantic import UUID4  # Se usar UUID; senão, use int
+from src.config import auth_settings 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-JWT_SECRET = "JWT_SECRET"  # Idealmente: use uma variável de ambiente
+http_bearer = HTTPBearer()
 
-async def parse_jwt_data(token: str = Depends(oauth2_scheme)) -> dict[str, Any]:
+async def parse_jwt_data(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer)
+) -> dict[str, Any]:
+    token = credentials.credentials
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        return {"user_id": payload["id"]}
+        payload = jwt.decode(token, auth_settings.JWT_SECRET, algorithms=[auth_settings.JWT_ALG])
+        print(payload)
+        return {"user_id": payload["user_id"]}
     except JWTError:
         raise InvalidCredentials()
 
 
 async def valid_document_id(document_id: int) -> dict[str, Any]:
-    document = await service.get_document_raw(document_id)  # nova função que retorna o model direto
-    if not document:
-        raise DocumentNotFound()
+    document = await service.get_document(document_id)  # nova função que retorna o model direto
     return document
-
 
 async def valid_owned_document(
     document: dict[str, Any] = Depends(valid_document_id),

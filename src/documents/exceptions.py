@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 class DocumentNotFound(HTTPException):
     def __init__(self, detail: str = "Documento não encontrado"):

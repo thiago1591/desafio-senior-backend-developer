@@ -1,6 +1,8 @@
 # routers/documents.py
 from fastapi import APIRouter, Depends, status
 from typing import List
+
+from src.documents.exceptions import UserNotOwner
 from . import schemas, service
 from .dependencies import parse_jwt_data, valid_owned_document
 
@@ -11,9 +13,8 @@ async def create_document(
     document: schemas.DocumentCreate,
     token_data: dict = Depends(parse_jwt_data),
 ):
-    # Opcional: verificar se user_id no body bate com token_data["user_id"]
     if document.user_id != token_data["user_id"]:
-        raise HTTPException(status_code=403, detail="Operação não permitida.")
+        raise UserNotOwner()
     return await service.create_document(document)
 
 

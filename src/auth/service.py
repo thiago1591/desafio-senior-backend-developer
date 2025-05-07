@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from src.user.models import User
 from .schemas import UserLoginResponse, UserAuthenticated, UserSignup, UserLogin
 from .exceptions import InvalidCredentials
-from .config import auth_settings  # Importando as configurações
+from src.config import auth_settings  # Importando as configurações
 import os
 
 # Instanciando o passlib para criptografar senhas
