@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+tortoise-orm[asyncpg]
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+email-validator
+aiofiles
+loguru
+python-multipart
+pydantic
+aerich
+tomlkit
