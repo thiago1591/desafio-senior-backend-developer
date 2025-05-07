@@ -3,6 +3,12 @@ from fastapi import HTTPException, status
 from .models import User
 from .schemas import UserResponse, UserUpdate
 from datetime import datetime
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 async def create_user(user_create):
     exists = await User.filter(username=user_create.username).exists() or \
@@ -16,7 +22,7 @@ async def create_user(user_create):
         user = await User.create(
             username=user_create.username,
             email=user_create.email,
-            password=user_create.password,  # Em produção, faça hash!
+            password=hash_password(user_create.password),
             birth_date=user_create.birth_date,
             cpf=user_create.cpf,
             phone=user_create.phone

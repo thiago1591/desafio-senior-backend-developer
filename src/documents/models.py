@@ -1,0 +1,15 @@
+from tortoise import fields
+from tortoise.models import Model
+
+class Document(Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField("models.User", related_name="documents")
+    document_type = fields.CharField(max_length=50)  # Ex: identidade, CPF, comprovante_vacinacao
+    file_path = fields.CharField(max_length=255)     # Caso o usuário faça upload de um documento e precisamos salvar
+    file_name = fields.CharField(max_length=255)  
+    document_number = fields.CharField(max_length=50) # Ex: número do CPF, RG, etc.  
+    uploaded_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "documents"
+        unique_together = ("user", "document_type")  # Impede múltiplos documentos do mesmo tipo por usuário (opcional)
