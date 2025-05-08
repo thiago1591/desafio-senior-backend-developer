@@ -5,31 +5,37 @@ from .schemas import UserResponse, UserUpdate
 from datetime import datetime
 from passlib.context import CryptContext
 
+from ..transport.service import create_transport_card
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 async def create_user(user_create):
-    exists = await User.filter(username=user_create.username).exists() or \
+    exists = await User.filter(cpf=user_create.cpf).exists() or \
              await User.filter(email=user_create.email).exists()
+
     if exists:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Usuário ou e-mail já cadastrado."
-        )
+            detail="CPF ou e-mail já cadastrado."
+    )
+        
     try:
         user = await User.create(
-            username=user_create.username,
+            full_name=user_create.full_name,
             email=user_create.email,
             password=hash_password(user_create.password),
             birth_date=user_create.birth_date,
             cpf=user_create.cpf,
             phone=user_create.phone
         )
+        
+        await create_transport_card(user.id)
         return UserResponse(
             id=user.id,
-            username=user.username,
+            full_name=user.full_name,
             email=user.email,
             birth_date=user.birth_date,
             cpf=user.cpf,
@@ -43,7 +49,6 @@ async def create_user(user_create):
             detail="Erro de integridade ao criar usuário."
         )
 
-# Função para pegar um usuário pelo ID
 async def get_user(user_id: int):
     user = await User.filter(id=user_id).first()
     if user is None:
@@ -53,7 +58,7 @@ async def get_user(user_id: int):
         )
     return UserResponse(
         id=user.id,
-        username=user.username,
+        full_name=user.full_name,
         email=user.email,
         birth_date=user.birth_date,
         cpf=user.cpf,
@@ -67,7 +72,7 @@ async def get_users(skip: int = 0, limit: int = 10):
     return [
         UserResponse(
             id=user.id,
-            username=user.username,
+            full_name=user.full_name,
             email=user.email,
             birth_date=user.birth_date,
             cpf=user.cpf,
@@ -86,8 +91,8 @@ async def update_user(user_id: int, user_update: UserUpdate):
             detail="Usuário não encontrado."
         )
     
-    if user_update.username:
-        user.username = user_update.username
+    if user_update.full_name:
+        user.full_name = user_update.full_name
     if user_update.email:
         user.email = user_update.email
     if user_update.birth_date:
@@ -102,7 +107,7 @@ async def update_user(user_id: int, user_update: UserUpdate):
 
     return UserResponse(
         id=user.id,
-        username=user.username,
+        full_name=user.full_name,
         email=user.email,
         birth_date=user.birth_date,
         cpf=user.cpf,
