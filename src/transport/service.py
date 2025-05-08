@@ -1,13 +1,13 @@
 from tortoise.transactions import in_transaction
 from fastapi import HTTPException
 from starlette.status import HTTP_404_NOT_FOUND
+import secrets
 
 from .models import TransportCard, TransportTransactionHistory
 from .schemas import RechargeRequest
 from ..documents.exceptions import UserNotOwner
 
-
-async def recharge_card(card_number: str, data: RechargeRequest, token_data: dict):
+async def recharge_card(card_number: str, amount: RechargeRequest, token_data: dict):
     card = await TransportCard.get_or_none(card_number=card_number)
 
     if not card:
@@ -17,12 +17,12 @@ async def recharge_card(card_number: str, data: RechargeRequest, token_data: dic
         raise UserNotOwner()
 
     async with in_transaction():
-        card.balance += data.amount
+        card.balance += amount
         await card.save()
 
         await TransportTransactionHistory.create(
             card=card,
-            amount=data.amount,
+            amount=amount,
             type="recharge"
         )
 
@@ -45,4 +45,40 @@ async def debit_card(card: TransportCard, amount: int):
     return card
 
 async def get_transaction_history(card):
-    return await TransportTransactionHistory.filter(card=card).all()
+    transactions = await TransportTransactionHistory.filter(card=card).all()
+    
+    return [
+        {
+            "id": transaction.id,
+            "card_number": card.card_number,
+            "transaction_type": transaction.type,
+            "amount": transaction.amount,
+            "balance_after_transaction": card.balance, 
+            "transaction_date": transaction.created_at
+        } for transaction in transactions
+    ]
+
+async def get_user_cards(user_id: int):
+    cards = await TransportCard.filter(user_id=user_id).all()
+    
+    if not cards:
+        return []
+    
+    return cards
+
+async def create_transport_card(user_id: int) -> TransportCard:
+    #tenta gerar um código único de cartão até achar um que é único
+    while True:
+        card_number = ''.join(secrets.choice('0123456789') for _ in range(16))
+        existing_card = await TransportCard.get_or_none(card_number=card_number)
+        if not existing_card:
+            break
+    
+    card = await TransportCard.create(
+        user_id=user_id,
+        card_number=card_number,
+        balance=0.00,
+        status='active'
+    )
+    
+    return card

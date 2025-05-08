@@ -29,6 +29,13 @@ class RechargeRequest(BaseModel):
 
     class Config:
         orm_mode = True
+
+class RechargeResponse(BaseModel):
+    card_number: str = Field(..., example="1234567890")
+    new_balance: int = Field(..., example=5000)
+
+    class Config:
+        orm_mode = True
         
 class TransportCardRecharge(BaseModel):
     amount: int = Field(..., example=1000)  

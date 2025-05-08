@@ -7,7 +7,14 @@ from .dependencies import parse_jwt_data
 
 router = APIRouter(prefix="/transport-card", tags=["transport-card"])
 
-@router.get("/{card_number}/balance", response_model=schemas.TransportCardResponse)
+@router.get("/my-cards", response_model=List[schemas.TransportCardResponse])
+async def get_user_cards(
+    token_data: dict = Depends(parse_jwt_data)
+):
+    cards = await service.get_user_cards(token_data["user_id"])
+    return cards
+
+@router.get("/{card_number}/balance", response_model=int)
 async def get_balance(
     card_number: str,
     token_data: dict = Depends(parse_jwt_data),
@@ -15,9 +22,9 @@ async def get_balance(
 ):
     if card.user_id != token_data["user_id"]:
         raise UserNotOwner()
-    return card
+    return card.balance
 
-@router.post("/{card_number}/recharge", response_model=schemas.TransportCardResponse)
+@router.post("/{card_number}/recharge", response_model=schemas.RechargeResponse)
 async def recharge_card(
     card_number: str,
     payload: schemas.TransportCardRecharge,
@@ -26,7 +33,7 @@ async def recharge_card(
 ):
     if card.user_id != token_data["user_id"]:
         raise UserNotOwner()
-    return await service.recharge_card(card, payload.amount)
+    return await service.recharge_card(card.card_number, payload.amount, token_data)
 
 @router.post("/{card_number}/debit", response_model=schemas.TransportCardResponse)
 async def debit_card(

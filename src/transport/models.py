@@ -5,7 +5,7 @@ from enum import Enum
 class TransportCard(Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", related_name="transport_cards")
-    balance = fields.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    balance = fields.IntField(default=0)  
     card_number = fields.CharField(max_length=20, unique=True)
     status = fields.CharField(max_length=20, default="active")  # active, blocked, expired
 
