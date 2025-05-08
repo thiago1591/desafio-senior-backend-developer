@@ -1,0 +1,20 @@
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
+from fastapi import Depends
+from . import service
+from .exceptions import InvalidCredentials, UserNotOwner
+from typing import Any
+from src.config import auth_settings 
+
+http_bearer = HTTPBearer()
+
+async def parse_jwt_data(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer)
+) -> dict[str, Any]:
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, auth_settings.JWT_SECRET, algorithms=[auth_settings.JWT_ALG])
+        print(payload)
+        return {"user_id": payload["user_id"]}
+    except JWTError:
+        raise InvalidCredentials()
