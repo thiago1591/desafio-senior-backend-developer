@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from .schemas import UserLogin, UserLoginResponse, UserAuthenticated
+from fastapi import APIRouter
+from .schemas import UserLogin, UserLoginResponse
 from .service import login_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
