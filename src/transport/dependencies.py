@@ -25,4 +25,5 @@ async def parse_jwt_data(
         print(payload)
         return {"user_id": payload["user_id"]}
     except JWTError:
+        print('erro no transport')
         raise InvalidCredentials()

@@ -1,4 +1,5 @@
 from tortoise import fields
+from tortoise.fields import CharEnumField
 from tortoise.models import Model
 from enum import Enum
 
@@ -21,7 +22,7 @@ class TransactionType(str, Enum):
 class TransportTransactionHistory(Model):
     id = fields.IntField(pk=True)
     card = fields.ForeignKeyField("models.TransportCard", related_name="history")
-    type = fields.CharEnumField(TransactionType)
+    type = CharEnumField(TransactionType)
     amount = fields.IntField()  
     created_at = fields.DatetimeField(auto_now_add=True)
 
