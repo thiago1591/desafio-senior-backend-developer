@@ -1,4 +1,3 @@
-# routers/documents.py
 from fastapi import APIRouter, Depends, status
 from typing import List
 
@@ -10,14 +9,14 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 @router.post("/", response_model=schemas.DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def create_document(
-    document: schemas.DocumentCreate,
+    document: schemas.DocumentBase,
     token_data: dict = Depends(parse_jwt_data),
 ):
-    if document.user_id != token_data["user_id"]:
-        raise UserNotOwner()
-    return await service.create_document(document)
-
-
+    document_with_user_id = schemas.DocumentCreate(
+        **document.model_dump(),
+        user_id=token_data["user_id"]
+    )
+    return await service.create_document(document_with_user_id)
 @router.get("/", response_model=List[schemas.DocumentResponse])
 async def list_documents(
     skip: int = 0,

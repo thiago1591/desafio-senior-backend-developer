@@ -21,7 +21,7 @@ async def parse_jwt_data(
 
 
 async def valid_document_id(document_id: int) -> dict[str, Any]:
-    document = await service.get_document(document_id)  # nova função que retorna o model direto
+    document = await service.get_document(document_id)  
     return document
 
 async def valid_owned_document(

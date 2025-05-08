@@ -3,7 +3,6 @@ from tortoise.exceptions import DoesNotExist, IntegrityError
 from .models import Document
 from .schemas import DocumentCreate, DocumentUpdate, DocumentResponse
 
-# Criar documento
 async def create_document(document: DocumentCreate):
     try:
         doc = await Document.create(
@@ -20,12 +19,10 @@ async def create_document(document: DocumentCreate):
             detail="Documento deste tipo já existe para o usuário."
         )
 
-# Listar documentos
 async def get_documents(skip: int = 0, limit: int = 10):
     documents = await Document.all().offset(skip).limit(limit).prefetch_related("user")
     return [await _to_document_response(doc) for doc in documents]
 
-# Obter documento por ID
 async def get_document(document_id: int):
     doc = await Document.filter(id=document_id).first()
     if not doc:
@@ -35,7 +32,6 @@ async def get_document(document_id: int):
         )
     return await _to_document_response(doc)
 
-# Atualizar documento
 async def update_document(document_id: int, update: DocumentUpdate):
     doc = await Document.filter(id=document_id).first()
     if not doc:
@@ -56,7 +52,6 @@ async def update_document(document_id: int, update: DocumentUpdate):
     await doc.save()
     return await _to_document_response(doc)
 
-# Deletar documento
 async def delete_document(document_id: int):
     doc = await Document.filter(id=document_id).first()
     if not doc:
@@ -66,7 +61,6 @@ async def delete_document(document_id: int):
         )
     await doc.delete()
 
-# Conversor auxiliar
 async def _to_document_response(doc: Document) -> DocumentResponse:
     return DocumentResponse(
         id=doc.id,
