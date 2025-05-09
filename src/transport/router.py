@@ -33,7 +33,7 @@ async def recharge_card(
 ):
     if card.user_id != token_data["user_id"]:
         raise UserNotOwner()
-    return await service.recharge_card(card.card_number, payload.amount, token_data)
+    return await service.recharge_card(card.card_number, payload.amount, token_data["user_id"])
 
 @router.post("/{card_number}/debit", response_model=schemas.TransportCardResponse)
 async def debit_card(

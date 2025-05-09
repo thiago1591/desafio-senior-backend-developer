@@ -4,20 +4,14 @@ from .models import Document
 from .schemas import DocumentCreate, DocumentUpdate, DocumentResponse
 
 async def create_document(document: DocumentCreate):
-    try:
-        doc = await Document.create(
+    doc = await Document.create(
             user_id=document.user_id,
             document_type=document.document_type,
             file_path=document.file_path,
             file_name=document.file_name,
             document_number=document.document_number
         )
-        return await _to_document_response(doc)
-    except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Documento deste tipo já existe para o usuário."
-        )
+    return await _to_document_response(doc)
 
 async def get_documents(skip: int = 0, limit: int = 10):
     documents = await Document.all().offset(skip).limit(limit).prefetch_related("user")

@@ -40,8 +40,8 @@ async def create_user(user_create):
             birth_date=user.birth_date,
             cpf=user.cpf,
             phone=user.phone,
-            created_at=str(user.created_at) if user.created_at else None,
-            updated_at=str(user.updated_at) if user.updated_at else None
+            created_at=str(user.created_at) if user.created_at else "",
+            updated_at=str(user.updated_at) if user.updated_at else ""
         )
     except IntegrityError:
         raise HTTPException(
@@ -112,8 +112,8 @@ async def update_user(user_id: int, user_update: UserUpdate):
         birth_date=user.birth_date,
         cpf=user.cpf,
         phone=user.phone,
-        created_at=str(user.created_at) if user.created_at else None,
-        updated_at=str(user.updated_at) if user.updated_at else None
+        created_at=str(user.created_at) if user.created_at else "",
+        updated_at=str(user.updated_at) if user.updated_at else ""
     )
 
 async def delete_user(user_id: int):

@@ -7,16 +7,16 @@ from .models import TransportCard, TransportTransactionHistory
 from .schemas import RechargeRequest
 from ..documents.exceptions import UserNotOwner
 
-async def recharge_card(card_number: str, amount: RechargeRequest, token_data: dict):
-    card = await TransportCard.get_or_none(card_number=card_number)
+async def recharge_card(card_number: str, amount: int, user_id: str):
 
-    if not card:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Cartão não encontrado")
+    try:
+        card = await TransportCard.get_or_none(card_number=card_number)
+        if not card:
+            raise HTTPException(status_code=404, detail="Cartão não encontrado")
 
-    if card.user_id != token_data["user_id"]:
-        raise UserNotOwner()
+        if card.user_id != user_id:
+            raise UserNotOwner()
 
-    async with in_transaction():
         card.balance += amount
         await card.save()
 
@@ -26,21 +26,27 @@ async def recharge_card(card_number: str, amount: RechargeRequest, token_data: d
             type="recharge"
         )
 
-    return {
-        "card_number": card.card_number,
-        "new_balance": card.balance
-    }
+        return {
+            "card_number": card.card_number,
+            "new_balance": card.balance
+        }
+
+    except HTTPException as e:
+        raise e  
+    
+    except Exception as e:
+        print(f"Erro durante o processo de recarga para o cartão {card_number}: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno no servidor")
 
 async def debit_card(card: TransportCard, amount: int):
     card.balance -= amount
     await card.save()
 
-    transaction = TransportTransactionHistory(
+    await TransportTransactionHistory.create(
         card=card,
         type="debit",
         amount=amount
     )
-    await transaction.save()
 
     return card
 
