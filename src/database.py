@@ -3,6 +3,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 import os
 from dotenv import load_dotenv
+from src.config import settings
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
@@ -47,6 +48,8 @@ async def close_db():
     await Tortoise.close_connections()
 
 def init_tortoise(app):
+    if settings.TESTING:
+        return 
     register_tortoise(
         app,
         config=TORTOISE_ORM,

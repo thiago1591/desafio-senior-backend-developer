@@ -17,6 +17,7 @@ async def create_document(
         user_id=token_data["user_id"]
     )
     return await service.create_document(document_with_user_id)
+
 @router.get("/", response_model=List[schemas.DocumentResponse])
 async def list_documents(
     skip: int = 0,
