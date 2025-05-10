@@ -17,9 +17,6 @@ def format_user_input(step: int, message: str) -> bool:
 def match_question(user_input: str, known_questions: List[dict], min_common_words: int = 2, min_similarity: float = 0.8) -> Optional[str]:
     #tenta encontrar a melhor correspondência entre a pergunta do usuário e perguntas conhecidas
     #implementação simplificada e limitada, sem uso de nlp
-    print(f"user_input: {user_input}")
-    print(f"known_questions: {known_questions}")
-    
     user_tokens = tokenize(user_input)
 
     for entry in known_questions:
