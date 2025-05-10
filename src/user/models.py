@@ -3,7 +3,7 @@ from tortoise.models import Model
 
 class User(Model):
     id = fields.IntField(pk=True)
-    full_name = fields.CharField(max_length=50, unique=True)
+    full_name = fields.CharField(max_length=50)
     email = fields.CharField(max_length=255, unique=True)
     password = fields.CharField(max_length=128)
     birth_date = fields.DateField(null=True)
