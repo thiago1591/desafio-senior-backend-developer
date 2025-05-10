@@ -7,6 +7,7 @@ from src.documents.schemas import DocumentCreate, DocumentUpdate
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service._to_document_response", new_callable=AsyncMock)
 @patch("src.documents.service.Document.create", new_callable=AsyncMock)
 async def test_create_document_success(mock_create, mock_to_response):
@@ -38,6 +39,7 @@ async def test_create_document_success(mock_create, mock_to_response):
 
  
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service._to_document_response", new_callable=AsyncMock)
 @patch("src.documents.service.Document.filter", new_callable=MagicMock)
 async def test_get_document_success(mock_filter, mock_to_response):
@@ -55,6 +57,7 @@ async def test_get_document_success(mock_filter, mock_to_response):
     assert result == expected_response
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service.Document.filter", new_callable=MagicMock)
 async def test_get_document_not_found(mock_filter):
     mock_filter.return_value.first = AsyncMock(return_value=None)
@@ -69,6 +72,7 @@ async def test_get_document_not_found(mock_filter):
     
     
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service._to_document_response", new_callable=AsyncMock)
 @patch("src.documents.service.Document.filter", new_callable=MagicMock)
 async def test_update_document_success(mock_filter, mock_to_response):
@@ -100,6 +104,7 @@ async def test_update_document_success(mock_filter, mock_to_response):
     assert result == expected_response
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service.Document.filter", new_callable=MagicMock)
 async def test_update_document_not_found(mock_filter):
     mock_filter.return_value.first = AsyncMock(return_value=None)
@@ -115,6 +120,7 @@ async def test_update_document_not_found(mock_filter):
     assert exc_info.value.detail == "Documento não encontrado."
     
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service.Document.filter", new_callable=MagicMock)
 async def test_delete_document_success(mock_filter):
     mock_doc = MagicMock()
@@ -128,6 +134,7 @@ async def test_delete_document_success(mock_filter):
     mock_doc.delete.assert_awaited_once()
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.documents.service.Document.filter", new_callable=MagicMock)
 async def test_delete_document_not_found(mock_filter):
     mock_filter.return_value.first = AsyncMock(return_value=None)

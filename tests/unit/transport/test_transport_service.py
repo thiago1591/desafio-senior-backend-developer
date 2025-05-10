@@ -1,9 +1,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from src.transport.service import recharge_card
-
+from unittest.mock import AsyncMock, patch, MagicMock
+import pytest
+from src.transport.service import debit_card
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.transport.models.TransportTransactionHistory.create", new_callable=AsyncMock)
 @patch("src.transport.models.TransportCard.get_or_none", new_callable=AsyncMock)
 async def test_recharge_card_success(
@@ -28,6 +31,7 @@ async def test_recharge_card_success(
     mock_create_transaction.assert_awaited_once()
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.transport.models.TransportCard.get_or_none", new_callable=AsyncMock)
 async def test_recharge_card_card_not_found(mock_get_card):
     mock_get_card.return_value = None
@@ -40,6 +44,7 @@ async def test_recharge_card_card_not_found(mock_get_card):
     mock_get_card.assert_awaited_once()
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.transport.models.TransportTransactionHistory.create", new_callable=AsyncMock)
 @patch("src.transport.models.TransportCard.get_or_none", new_callable=AsyncMock)
 async def test_multiple_recharges_accumulates_correctly(
@@ -68,6 +73,7 @@ async def test_multiple_recharges_accumulates_correctly(
     assert mock_create_transaction.await_count == 3
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.transport.models.TransportTransactionHistory.create", new_callable=AsyncMock)
 @patch("src.transport.models.TransportCard.get_or_none", new_callable=AsyncMock)
 async def test_recharge_card_high_value(
@@ -93,13 +99,9 @@ async def test_recharge_card_high_value(
     mock_get_card.assert_awaited_once()
     mock_card.save.assert_awaited_once()
     mock_create_transaction.assert_awaited_once()
-    
-from unittest.mock import AsyncMock, patch, MagicMock
-import pytest
-from src.transport.service import debit_card
-
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.transport.service.TransportTransactionHistory.create", new_callable=AsyncMock)
 async def test_debit_card_success(mock_create_transaction):
     mock_card = MagicMock()

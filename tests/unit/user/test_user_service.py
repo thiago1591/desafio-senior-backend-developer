@@ -5,6 +5,7 @@ from src.user.service import create_user, delete_user, get_users, update_user
 from src.user.schemas import UserCreate, UserResponse, UserUpdate
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.create_transport_card", new_callable=AsyncMock)
 @patch("src.user.service.User.create", new_callable=AsyncMock)
 @patch("src.user.service.User.filter")
@@ -39,6 +40,7 @@ async def test_create_user_success(mock_filter, mock_create, mock_create_card):
     mock_create_card.assert_awaited_once_with(1)
     
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.User.filter")
 async def test_create_user_fails_when_cpf_exists(mock_filter):
     mock_filter.return_value.exists = AsyncMock(side_effect=[True])  
@@ -59,6 +61,7 @@ async def test_create_user_fails_when_cpf_exists(mock_filter):
     assert exc_info.value.detail == "CPF ou e-mail já cadastrado."
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.User.filter")
 async def test_create_user_fails_when_email_exists(mock_filter):
     mock_filter.return_value.exists = AsyncMock(side_effect=[False, True])
@@ -80,6 +83,7 @@ async def test_create_user_fails_when_email_exists(mock_filter):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.create_transport_card", new_callable=AsyncMock)
 @patch("src.user.service.User.create", new_callable=AsyncMock)
 @patch("src.user.service.User.filter")
@@ -114,6 +118,7 @@ async def test_password_not_in_user_response(mock_filter, mock_create, mock_crea
     assert not hasattr(result, "password"), "A resposta não deve conter o campo 'password'"
     
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.User.all")
 #testa se a paginaçao está funcionando. Isso é importante para
 #garantir que não faça uma busca em todos os usuários
@@ -134,6 +139,7 @@ async def test_get_users_pagination_applied(mock_all):
     assert result == []
     
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.User.filter")
 async def test_update_user_success(mock_filter):
     mock_user = MagicMock()
@@ -164,6 +170,7 @@ async def test_update_user_success(mock_filter):
     mock_user.save.assert_awaited_once()
     
 @pytest.mark.asyncio
+@pytest.mark.unit
 @patch("src.user.service.User.filter")
 async def test_delete_user_success(mock_filter):
     mock_user = MagicMock()
