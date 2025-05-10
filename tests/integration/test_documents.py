@@ -12,6 +12,7 @@ from src.user.models import User
 @pytest.mark.anyio
 @pytest.mark.integration
 async def test_create_document_successfully(client):  
+    await User.all().delete()
     user = await User.create(
         full_name="João da Silva",
         email="joao.silva@example.com",
@@ -48,6 +49,7 @@ async def test_create_document_successfully(client):
 @pytest.mark.anyio
 @pytest.mark.integration
 async def test_get_document_success(client: AsyncClient):
+    await User.all().delete()
     user = await User.create(
         full_name="Maria Souza",
         email="maria@example.com",
@@ -78,6 +80,7 @@ async def test_get_document_success(client: AsyncClient):
 @pytest.mark.anyio
 @pytest.mark.integration
 async def test_get_document_not_found(client: AsyncClient):
+    await User.all().delete()
     user = await User.create(
         full_name="Maria Souza",
         email="maria2@example.com",
@@ -98,6 +101,7 @@ async def test_get_document_not_found(client: AsyncClient):
 @pytest.mark.anyio
 @pytest.mark.integration
 async def test_update_document_success(client: AsyncClient):
+    await User.all().delete()
     user = await User.create(
         full_name="João da Silva",
         email="joao@example.com",
@@ -139,6 +143,7 @@ async def test_update_document_success(client: AsyncClient):
 @pytest.mark.anyio
 @pytest.mark.integration
 async def test_update_document_not_found(client: AsyncClient):
+    await User.all().delete()
     user = await User.create(
         full_name="Carlos Oliveira",
         email="carlos@example.com",
