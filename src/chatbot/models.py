@@ -1,40 +1,25 @@
-from tortoise import fields
+from tortoise import fields, models
 from tortoise.models import Model
-from enum import Enum, auto
-from tortoise.fields import CharEnumField
+from enum import Enum
 
-class ChatNodeType(str, Enum):
-    ROOT = 'root'
-    MENU = 'menu'
-    LEAF = 'leaf'
 
-class ChatSession(Model):
+class IntentEnum(int, Enum):
+    CONSULTAR_SALDO = 1
+    CANCELAR_CARTAO = 2
+    SALVAR_DOCUMENTO = 3
+    VER_DOCUMENTOS = 4
+    PERGUNTA_LIVRE = 5
+
+class ChatbotState(Model):
     id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.User', related_name='chat_sessions')
-    current_node_id = fields.CharField(max_length=100)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    last_interaction_at = fields.DatetimeField(auto_now=True)
-    is_active = fields.BooleanField(default=True)
+    user = fields.ForeignKeyField("models.User", related_name="chatbot_states", on_delete=fields.CASCADE)
+    
+    last_intent = fields.IntEnumField(IntentEnum, null=True)
+    
+    step = fields.IntField(null=True)
+    
+    context = fields.JSONField(null=True)
+    updated_at = fields.DatetimeField(auto_now=True)
 
     class Meta:
-        table = 'chat_sessions'
-
-class ChatInteraction(Model):
-    id = fields.IntField(pk=True)
-    chat_session = fields.ForeignKeyField('models.ChatSession', related_name='interactions')
-    node_id = fields.CharField(max_length=100)
-    user_selection = fields.CharField(max_length=255)
-    created_at = fields.DatetimeField(auto_now_add=True)
-
-    class Meta:
-        table = 'chat_interactions'
-
-class ChatbotNode(Model):
-    id = fields.CharField(max_length=100, pk=True)
-    parent_id = fields.CharField(max_length=100, null=True)
-    type = fields.CharEnumField(ChatNodeType)
-    message = fields.TextField()
-    options = fields.JSONField(default=list)  # Store options as JSON
-
-    class Meta:
-        table = 'chatbot_nodes'
+        table = "chatbot_states"

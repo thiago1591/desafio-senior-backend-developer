@@ -1,31 +1,29 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
-from .schemas import ChatbotResponse, InteractionRequest
+
+from src.chatbot.services import intent_dispatcher
+from src.user.models import User
+from .schemas import ChatInput, ChatbotResponse
 from .dependencies import parse_jwt_data
-from src.chatbot import service
+from src.chatbot import state_manager
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
-@router.get("/start", response_model=ChatbotResponse)
-async def start_conversation(
-    token_data: dict = Depends(parse_jwt_data)
-):
-    return await service.start_conversation(token_data["user_id"])
+@router.post("/start", response_model=ChatbotResponse)
+async def start_conversation(token_data: dict = Depends(parse_jwt_data),):
+    await state_manager.reset_state(token_data["user_id"])
+    return ChatbotResponse(message="""
+        Olá, eu sou o IPlani, o assistente virtual da Prefeitura. Como posso te ajudar hoje?
 
-@router.post("/interact", response_model=ChatbotResponse)
-async def handle_interaction(
-    interaction_request: InteractionRequest
-):
-    return await service.handle_interaction(
-        interaction_request.chat_id,
-        interaction_request.user_selection,
-        interaction_request.node_id
-    )
+        1) Consultar saldo do meu cartão  
+        2) Cancelar um cartão  
+        3) Salvar um documento  
+        4) Ver os documentos  
+        5) Fazer uma pergunta
+    """)
 
-@router.post("/reset", response_model=ChatbotResponse)
-async def reset_conversation(
-    user_id: int
-):
-    """
-    Reset the conversation state for a user
-    """
+@router.post("/chat", response_model=ChatbotResponse)
+async def chat(input: ChatInput, token_data: dict = Depends(parse_jwt_data)):
+    state = await state_manager.get_or_create_state(token_data["user_id"])
+    response_message = await intent_dispatcher.dispatch(state, input.message)
+    return ChatbotResponse(message=response_message)

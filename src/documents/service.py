@@ -17,6 +17,10 @@ async def get_documents(skip: int = 0, limit: int = 10):
     documents = await Document.all().offset(skip).limit(limit).prefetch_related("user")
     return [await _to_document_response(doc) for doc in documents]
 
+async def get_my_documents(user_id: str):
+    documents = await Document.filter(user_id=user_id).prefetch_related("user")
+    return [await _to_document_response(doc) for doc in documents]
+    
 async def get_document(document_id: int):
     doc = await Document.filter(id=document_id).first()
     if not doc:

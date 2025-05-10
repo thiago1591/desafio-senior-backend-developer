@@ -26,6 +26,11 @@ async def list_documents(
 ):
     return await service.get_documents(skip, limit)
 
+@router.get("/my-documents", response_model=List[schemas.DocumentResponse])
+async def list_documents(
+    token_data: dict = Depends(parse_jwt_data)
+):
+    return await service.get_documents(token_data["user_id"])
 
 @router.get("/{document_id}", response_model=schemas.DocumentResponse)
 async def get_document(
