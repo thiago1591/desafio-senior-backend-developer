@@ -1,4 +1,5 @@
-version: '3.8'
+version: '3.9'
+
 services:
   db:
     image: postgres:15.3
@@ -13,12 +14,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    profiles:
+      - dev
+      - prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     build:
       context: .
       dockerfile: DockerFile
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     env_file:
       - .env
     depends_on:
@@ -27,6 +35,36 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    profiles:
+      - dev
+
+  api_prod:
+    build:
+      context: .
+      dockerfile: DockerFile
+      target: production
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./logs:/app/logs  
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
+    profiles:
+      - prod
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:
+  logs:  
