@@ -33,6 +33,84 @@ async def test_register_user_successfully(client: AsyncClient):
     
 @pytest.mark.anyio
 @pytest.mark.integration
+async def test_register_user_with_invalid_credentials(client: AsyncClient):
+    invalid_cpf_payload = {
+        "full_name": "João da Silva",
+        "email": "joao.silva.miguel@example.com",
+        "birth_date": "1990-05-20",
+        "cpf": "12345678901", 
+        "phone": "11998765432",
+        "password": "SenhaSegura123"
+    }
+    
+    response = await client.post("/users/register", json=invalid_cpf_payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    data = response.json()
+    assert "detail" in data
+    assert "CPF inválido" in data["detail"][0]["msg"]
+
+    invalid_phone_payload = {
+        "full_name": "João da Silva",
+        "email": "joao.silva.miguel@example.com",
+        "birth_date": "1990-05-20",
+        "cpf": "30721764002",
+        "phone": "11999",  
+        "password": "SenhaSegura123"
+    }
+    
+    response = await client.post("/users/register", json=invalid_phone_payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    data = response.json()
+    assert "detail" in data
+    assert "Telefone deve conter apenas números (10 ou 11 dígitos)" in data["detail"][0]["msg"]
+
+    short_password_payload = {
+        "full_name": "João da Silva",
+        "email": "joao.silva.miguel@example.com",
+        "birth_date": "1990-05-20",
+        "cpf": "30721764002",
+        "phone": "11998765432",
+        "password": "Senha"  
+    }
+    
+    response = await client.post("/users/register", json=short_password_payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    data = response.json()
+    assert "detail" in data
+    assert "A senha deve ter pelo menos 8 caracteres" in data["detail"][0]["msg"]
+
+    no_uppercase_password_payload = {
+        "full_name": "João da Silva",
+        "email": "joao.silva.miguel@example.com",
+        "birth_date": "1990-05-20",
+        "cpf": "30721764002",
+        "phone": "11998765432",
+        "password": "senhasegura123" 
+    }
+    
+    response = await client.post("/users/register", json=no_uppercase_password_payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    data = response.json()
+    assert "detail" in data
+    assert "A senha deve conter pelo menos uma letra maiúscula" in data["detail"][0]["msg"]
+
+    no_number_password_payload = {
+        "full_name": "João da Silva",
+        "email": "joao.silva.miguel@example.com",
+        "birth_date": "1990-05-20",
+        "cpf": "30721764002",
+        "phone": "11998765432",
+        "password": "SenhaSemNumero" 
+    }
+    
+    response = await client.post("/users/register", json=no_number_password_payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    data = response.json()
+    assert "detail" in data
+    assert "A senha deve conter pelo menos um número" in data["detail"][0]["msg"]
+    
+@pytest.mark.anyio
+@pytest.mark.integration
 async def test_get_user_successfully(client: AsyncClient):
     user_payload = {
         "full_name": "Teste da Silva",
