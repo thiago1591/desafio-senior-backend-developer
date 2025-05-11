@@ -13,7 +13,6 @@ class AuthConfig(BaseSettings):
     JWT_EXP: int = 5  # minutos
 
     REFRESH_TOKEN_KEY: str
-    REFRESH_TOKEN_EXP: timedelta = timedelta(days=30)
 
     SECURE_COOKIES: bool = True
 

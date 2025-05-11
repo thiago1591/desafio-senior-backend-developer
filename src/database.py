@@ -7,11 +7,11 @@ from src.config import settings
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
-DB_USER = os.getenv('POSTGRES_USER', 'user_example')
-DB_PASS = os.getenv('POSTGRES_PASSWORD', 'example')
-DB_DATABASE = os.getenv('POSTGRES_DB', 'db_example')
-DB_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-DB_PORT = os.getenv('POSTGRES_PORT', '5432')
+DB_USER = os.getenv('DB_USER', 'user_example')
+DB_PASS = os.getenv('DB_PASS', 'example')
+DB_DATABASE = os.getenv('DB_DATABASE', 'db_example')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
 
 TORTOISE_ORM = {
     "connections": {
