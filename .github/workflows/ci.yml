@@ -29,11 +29,17 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run unit tests
+      env:
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
       run: |
         source venv/bin/activate  
         TESTING=1 pytest -m unit
 
     - name: Run integration tests
+      env:
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
       run: |
         source venv/bin/activate  
         TESTING=1 pytest -m integration
