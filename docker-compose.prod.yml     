@@ -14,9 +14,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    profiles:
-      - dev
-      - prod
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -24,22 +21,6 @@ services:
       retries: 5
 
   api:
-    build:
-      context: .
-      dockerfile: DockerFile
-    env_file:
-      - .env
-    depends_on:
-      - db
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
-    profiles:
-      - dev
-
-  api_prod:
     build:
       context: .
       dockerfile: DockerFile
@@ -51,10 +32,8 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./logs:/app/logs  
+      - ./logs:/app/logs
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
-    profiles:
-      - prod
     deploy:
       restart_policy:
         condition: on-failure
@@ -67,4 +46,4 @@ services:
 
 volumes:
   postgres_data:
-  logs:  
+  logs:
