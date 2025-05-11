@@ -5,7 +5,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     return """
         CREATE TABLE IF NOT EXISTS "users" (
     "id" SERIAL NOT NULL PRIMARY KEY,
-    "full_name" VARCHAR(50) NOT NULL UNIQUE,
+    "full_name" VARCHAR(50) NOT NULL,
     "email" VARCHAR(255) NOT NULL UNIQUE,
     "password" VARCHAR(128) NOT NULL,
     "birth_date" DATE,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "documents" (
 );
 CREATE TABLE IF NOT EXISTS "transport_cards" (
     "id" SERIAL NOT NULL PRIMARY KEY,
-    "balance" DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "balance" INT NOT NULL DEFAULT 0,
     "card_number" VARCHAR(20) NOT NULL UNIQUE,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
     "user_id" INT NOT NULL REFERENCES "users" ("id") ON DELETE CASCADE
@@ -38,6 +38,15 @@ CREATE TABLE IF NOT EXISTS "transport_transaction_history" (
     "card_id" INT NOT NULL REFERENCES "transport_cards" ("id") ON DELETE CASCADE
 );
 COMMENT ON COLUMN "transport_transaction_history"."type" IS 'RECHARGE: recharge\nDEBIT: debit';
+CREATE TABLE IF NOT EXISTS "chatbot_states" (
+    "id" SERIAL NOT NULL PRIMARY KEY,
+    "last_intent" SMALLINT,
+    "step" INT,
+    "context" JSONB,
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "user_id" INT NOT NULL REFERENCES "users" ("id") ON DELETE CASCADE
+);
+COMMENT ON COLUMN "chatbot_states"."last_intent" IS 'CONSULTAR_SALDO: 1\nCANCELAR_CARTAO: 2\nSALVAR_DOCUMENTO: 3\nVER_DOCUMENTOS: 4\nPERGUNTA_LIVRE: 5';
 CREATE TABLE IF NOT EXISTS "aerich" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "version" VARCHAR(255) NOT NULL,
