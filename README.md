@@ -17,14 +17,25 @@ Antes de realizar as etapas para rodar o projeto, você pode visualizar a API qu
 ## Rodando o projeto
 ### Requisitos
  - Docker instalado
-### Comando
+### Passo a passo
 ```console
-docker-compose --profile dev up -d
+git clone https://github.com/thiago1591/desafio-senior-backend-developer
+```
+```console
+cd desafio-senior-backend-developer
+```
+Agora, crie um arquivo .env e copie o conteúdo do .env.example
+```console
+docker-compose -f docker-compose.dev.yml up --build
 ```
 Esse comando irá subir o banco de dados e a API, que estará disponível localmente na porta **8000**
 
+Obs: para testar o OAuth2 seria necessário preencher os valores referente ao Google e Meta com valores reais. Durante o desenvolvimento do case, criei um projeto/app no Google/Meta para obter as credenciais. Mas não adiantaria eu colocar elas no example pois, como não está em produção, eu precisaria adicionar o email do testador no painel, senão daria "App não disponível". De qualquer forma, coloquei prints no README mostrando o funcionamento do OAuth2.
+
 ## Documentação
 A API está documentada no Swagger, acessando a rota [/docs](http://localhost:8000/docs)
+
+Nela é possível ver em detalhes todos os endpoints disponíveis, assim como os schemas.
 
 ## Estrutura do projeto
 ```
@@ -64,6 +75,7 @@ A estrutura do projeto segue uma arquitetura modular, onde cada módulo tem algu
    8. `utils.py` - funções de utilitários
    9. `exceptions.py` - excessões específicas do módulo, ex: `DocumentNotFound`
 
+## Entidade Relacionamento
 
 ## Testes
 Os testes estão no diretórios `tests` na raiz do projeto. Estão implementados tanto testes de unidade quanto teste de integração.
@@ -75,8 +87,12 @@ Os testes de integração, por outro lado, testam um cenário mais realista. O s
 Os testes são executados automaticamente ao enviar um push. Se você quiser rodar manualmente, é necessário rodar os testes de integração separado dos de unidade. 
 A variável TESTING=1 serve para impedir que o banco real Postgres inicialize
 
-todo: adicionar explicação para rodar manual
-
+```console
+docker exec -it desafio-senior-backend-developer-api-1 pytest -m unit
+```
+```console
+docker exec -it desafio-senior-backend-developer-api-1 sh -c "TESTING=1 pytest -m integration"
+```
 
 ```
 ├── tests
@@ -101,6 +117,8 @@ todo: adicionar explicação para rodar manual
 - Autenticação e Gerenciamento de Usuários
     - Cadastro e login de usuários (simples, com e-mail/senha).
     - Uso de tokens JWT para autenticação.
+    - Autenticação com o Google
+    - Autenticação com o Meta
     - CRUD de usuários
 
 - Gestão de Documentos
@@ -118,6 +136,18 @@ todo: adicionar explicação para rodar manual
     - Fazer uma pergunta livre (resposta de perguntas mokadas)
     - Cancelar Cartão (simulado, apenas diz que criou uma solicitação de cancelamento)
     - Salvar documento (iniciado mas não finalizado)
+
+## OAuth2
+
+## Separação dos ambientes
+O projeto possui 2 ambientes: dev e prod. Foram criados 2 Dockerfiles e 2 Docker Composes. Nesse README, os comandos já instruem para rodar corretamente o ambiente de dev, para testar localmente. As configurações de produção foram utilizadas no deploy do projeto, que serão discutidas mais detalhadamente da seção de discussões de decisões.
+
+## CI/CD
+Em .github->workflows->ci.yml
+está o arquivo da pipeline. Nela, está configurado para executar o github actions com os testes. Sempre que é enviado um novo push, garantindo que novas alterações não quebrem funcionalidades existentes.
+
+## Logging
+na pasta src, existe um módulo dedicado ao logging. Nele, está configurado apenas o log padrão do Python. Contudo, essa abstração é importante pois, caso fosse necessário implementar alguma ferramenta de logging (como por exemplo o Loki), então bastaria implementar nesse módulo e todo restante do código iria funcionar da mesma forma. 
 
 ## 🔹 Tecnologias
 
@@ -160,4 +190,14 @@ Decidi criar um módulo separado para a recuperação de senha pois é o que eu 
 A funcionalidade do chatbot acredito que seja a funcionalidade desse desafio que poderia seguir diferentes caminhos. Eu achei que seria legal para o contexto desse desafio, usar o chatbot para realizar algumas das funcionalidades dos outros módulos. Também coloquei opção para ele responder uma pergunta, que é a funcionalidade principal requerida no desafio. 
 O bot responde perguntas verificando diretamente das perguntas existentes (que estão mokadas). Para uma funcionaldiade real, daria pra usar um banco de dados vetorial para armazenar diferentes perguntas e respostas. Quando o usuário fizesse uma nova pergunta, verificaria a similaridade no espaço vetorial para buscar a resposta mais relevante. Também daria pra usar isso em conjunto com um LLM para passar as respostas mais similares para o contexto do LLM e responder uma resposta ainda mais precisa (técnica de RAG). É algo que eu implementei no meu TCC.
 
+### Deploy
+Como eu já tinha um domínio e uma máquina rodando na AWS, decidi fazer o deploy da API apenas como um extra, para ter um ambiente em produção real.
+O que eu fiz foi:
+ - usei uma instância EC2
+ - clonei o repo na máquina
+ - rodei o docker de produção e configurei o env
+ - cadastrei o subdomínio api.iplan.thiagoandre.dev no registrobr
+ - configurei o certbot para certificar o https
 
+ ### Consideração sobre o login
+Nesse projeto, decidi que o login seria feito por CPF, por se tratar de um gerenciamento de documentos em um sistema de serviço público. Contudo, na interface do Swagger, para funcionar o OAuth através do botão no canto direito superior da página, é necessário que o nome dos parâmetros do login sejam "username" e "password". Por esse motivo talvez acabe gerando um pequena confusão, pois não fica tão claro que deve ser inserido o CPF.
