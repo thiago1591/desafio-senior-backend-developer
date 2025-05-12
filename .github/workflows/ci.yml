@@ -32,14 +32,37 @@ jobs:
       env:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASS: ${{ secrets.DB_PASS }}
+        DB_DATABASE: ${{ secrets.DB_DATABASE }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+        META_CLIENT_ID: ${{ secrets.META_CLIENT_ID }}
+        META_CLIENT_SECRET: ${{ secrets.META_CLIENT_SECRET }}
+        META_REDIRECT_URI: ${{ secrets.META_REDIRECT_URI }}
       run: |
         source venv/bin/activate  
-        TESTING=1 pytest -m unit
+        pytest -m unit
 
     - name: Run integration tests
       env:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASS: ${{ secrets.DB_PASS }}
+        DB_DATABASE: ${{ secrets.DB_DATABASE }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+        META_CLIENT_ID: ${{ secrets.META_CLIENT_ID }}
+        META_CLIENT_SECRET: ${{ secrets.META_CLIENT_SECRET }}
+        META_REDIRECT_URI: ${{ secrets.META_REDIRECT_URI }}
+        TESTING: 1
       run: |
         source venv/bin/activate  
-        TESTING=1 pytest -m integration
+        pytest -m integration
