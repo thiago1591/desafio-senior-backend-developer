@@ -18,13 +18,20 @@ Antes de realizar as etapas para rodar o projeto, você pode visualizar a API qu
 ### Requisitos
  - Docker instalado
 ### Passo a passo
+1) Clone o repo
 ```console
 git clone https://github.com/thiago1591/desafio-senior-backend-developer
 ```
+2) Vá até a pasta do projeto
 ```console
 cd desafio-senior-backend-developer
 ```
-Agora, crie um arquivo .env e copie o conteúdo do .env.example
+
+3) Crie o .env
+
+Crie um arquivo .env na raiz do projeto e copie para ele, o conteúdo do .env.example
+
+4) Suba o docker
 ```console
 docker-compose -f docker-compose.dev.yml up --build
 ```
@@ -34,7 +41,6 @@ Esse comando irá subir o Postgres, a API e o Jaeger (que será explicado mais a
 
 A API estará disponível localmente na porta **8000**
 
-Obs: para testar o OAuth2 seria necessário preencher os valores do .env referente ao Google e Meta com valores reais. Durante o desenvolvimento do case, criei um projeto/app no Google/Meta para obter as credenciais. Mas não adiantaria eu colocar elas no example pois, como não está em produção, eu precisaria adicionar o email do testador no painel, senão daria "App não disponível". De qualquer forma, coloquei prints no README mostrando o funcionamento do OAuth2.
 
 ## Documentação
 A API está documentada no Swagger, acessando a rota [/docs](http://localhost:8000/docs)
@@ -80,6 +86,8 @@ A estrutura do projeto segue uma arquitetura modular, onde cada módulo tem algu
    9. `exceptions.py` - excessões específicas do módulo, ex: `DocumentNotFound`
 
 ## Entidade Relacionamento
+<img src="doc_images/er.png" alt="Logo" width="600"/>
+
 
 ## Testes
 Os testes estão no diretórios `tests` na raiz do projeto. Estão implementados tanto testes de unidade quanto teste de integração.
@@ -142,11 +150,37 @@ Foram criados 19 testes unitários e e 18 testes de integração, totalizando 37
     - Salvar documento (iniciado mas não finalizado)
 
 ## OAuth2
+Além da autenticação padrão com JWT, o sistema também possui opções de autenticação com o Google e Meta. 
 
-## Rota de saúde
+Para testar o OAuth2 social, é necessário preencher os valores do .env referente ao Google e Meta com valores reais. Durante o desenvolvimento do case, criei um projeto/app no Google/Meta para obter as credenciais. Mas mesmo que eu colocasse minhas credenciais no example, outras pessoas não conseguiriam testar o OAuth, pois como não está em produção, eu precisaria adicionar o email do testador no painel, senão daria "App não disponível". Por esse motivo, estou colocando prints abaixo mostrando o funcionamento.
+
+Para usar o OAuth do google, é necessário acessar a rota diretamente do navegador (Swagger não tem redirect)
+`http://localhost:8000/auth/google/login`
+
+O resultado é a tela abaixo:
+
+<img src="doc_images/oauth_google1.png" alt="Logo" width="600"/>
+
+Após selecionar a conta, leva para a rota de redirect (é um endpoint da API)
+
+<img src="doc_images/oauth_google2.png" alt="Logo" width="600"/>
+
+Abaixo está o fluxo semelhante para o Meta
+
+<img src="doc_images/oauth_meta1.png" alt="Logo" width="600"/>
+<img src="doc_images/oauth_meta2.png" alt="Logo" width="600"/>
+
+No endpoint de callback, eu estou apenas retornando as informações obtidas, para verificar o funcionamento do OAuth.
+Como nesse sistema a autenticação é com CPF e ele é obrigatório, em um fluxo real do frontend, o usuário ainda precisaria ir para outra 
+página para terminar o cadastro. Por conta disso, não estou criando a conta do usuário direto no endpoint de callback (por ainda não ter todas as informações necessárias)
+
+## Rota de  Saúde
+é possível testar se a API está rodando chamando o endpoint [/health](http://localhost:8000/health)
 
 ## Bot
 Abaixo está um diagrama que mostra em mais detalhes as funcionalidades do bot
+
+<img src="doc_images/bot_flow.png" alt="Logo" width="700"/>
 
 Explicando mais tecnicamente, o bot tem 2 endpoints disponíveis:
  - /chatbot/start
@@ -159,15 +193,17 @@ Nesse momento, será chamada a camada de intent_dispatcher com o estado atual (q
 
 Mas o que é o estado atual? 
 
-Foi criada uma tabela chamada `ChatbotState`. 
+Foi criada uma tabela chamada `chatbot_states`. 
 
-imagem aqui
+<img src="doc_images/chatbot_er.png" alt="Logo" width="200"/>
 
 O objetivo dessa tabela, é permitir que o sistema crie uma máquina de estados, de forma que, quando o usuário interagir, o sistema "lembre" em que parte do fluxo ele está.
 
 Por exemplo. Se o usuário quer consultar o saldo, ele digita a opção correspondente e recebe o saldo. Nesse caso o fluxo não tem mais de 1 interação, então não precisa salvar o estado.
 
-Por outro lado, se o usuário quer fazer uma pergunta geral, ele escolhe a opção correspondente. Após isso, ele irá enviar outra requisição com a pergunta. Nesse caso, é preciso ter um estado salvo para "lembrar" que a última interação foi o usuário escolhendo que quer fazer uma pergunta e que o fluxo atual está recebendo a pergunta
+Por outro lado, se o usuário quer fazer uma pergunta geral, ele primeiro precisa enviar uma mensagem com numero 5, para indicar que quer fazer uma pergunta. Após isso, o bot irá pedir para o usuário digitar a pergunta e ele irá enviar outra requisição com a pergunta. Nesse caso, é preciso ter um estado salvo para "lembrar" que a última interação foi o usuário escolhendo que quer fazer uma pergunta e que o fluxo atual está recebendo a pergunta. 
+
+O mesmo aconteceria para o fluxo de salvar documentos, que precisaria perguntar as informações do documento para então salvar no final (implementação disso não foi finalizada mas a tabela de estados já permitiria implementar)
 
 ```
 ├── chatbot
@@ -195,6 +231,34 @@ está o arquivo da pipeline. Nela, está configurado para executar o github acti
 ## Logging
 na pasta src, existe um módulo dedicado ao logging. Nele, está configurado apenas o log padrão do Python. Contudo, essa abstração é importante pois, caso fosse necessário implementar alguma ferramenta de logging (como por exemplo o Loki), então bastaria implementar nesse módulo e todo restante do código iria funcionar da mesma forma. 
 
+Os logs são uma ferramenta bem importante de estar configurada pois facilita a depuração e correção de problemas que são encontrados em produção. O ideal é que já sejam configurados desde as etapas iniciais de uma API, por esse motivo coloquei esse esboço. 
+
+No endpoint de criação de usuário, eu coloquei alguns logs para mostrar como seria o funcionamento
+
+## Tracing
+O tracing é outra ferramenta de observabilidade, para complementar os logs. Ele permite rastrear o fluxo de execução de uma requisição ao longo de diferentes partes do sistema, assim como o tempo de execução em cada uma dessas partes. Eu usei o `OpenTelemetry` e implementei um exemplo, também no endpoint de criação de usuário. 
+
+No Docker Compose, adicionei um serviço do Jaeger. É possível acessar em 
+
+http://localhost:16686
+
+Esse painel já possui algumas ferramentas de observabilidade
+
+## Migrações
+
+Para gerenciamento das migrações, estou usando o [Aerich](https://tortoise-orm.readthedocs.io/en/latest/migration.html).
+
+O histórico de migrações fica na pasta `/migrations`, na raiz do projeto.
+
+### Criar uma nova migração
+
+Para criar uma nova migração após modificar os modelos, rode o seguinte comando:
+
+```bash
+docker compose exec desafio-senior-backend-developer-api-1 aerich migrate
+```
+Sempre que o container do Docker sobe, ele já roda `aerich upgrade`
+
 ## 🔹 Tecnologias
 
 - FastAPI como framework principal.
@@ -205,6 +269,8 @@ na pasta src, existe um módulo dedicado ao logging. Nele, está configurado ape
 - OpenAPI para Documentação da API
 - GitHub Actions
 - Docker
+- OpenTelemetry
+- Jaeger
 
 ## 🔹 Discussão de decisões
 
@@ -232,6 +298,9 @@ As principais vantagens são:
 ### Sobre a recuperação de senha
 Decidi criar um módulo separado para a recuperação de senha pois é o que eu faria em uma API real. Criei alguns endpoints para simular como seria o fluxo e coloquei um comentário onde seria a comunicação com o serviço externo (SMS ou Email) para envio do código de recuperação. Por conta do tempo acabei não finalizando essa módulo. 
 
+### Consideração sobre o login
+Nesse projeto, decidi que o login seria feito por CPF, por se tratar de um gerenciamento de documentos em um sistema de serviço público. Contudo, na interface do Swagger, para funcionar o OAuth através do botão no canto direito superior da página, é necessário que o nome dos parâmetros do login sejam "username" e "password". Por esse motivo talvez acabe gerando um pequena confusão, pois não fica tão claro que deve ser inserido o CPF.
+
 ### ChatBOT
 A funcionalidade do chatbot acredito que seja a funcionalidade desse desafio que poderia seguir diferentes caminhos. Eu achei que seria legal para o contexto desse desafio, usar o chatbot para realizar algumas das funcionalidades dos outros módulos (como consultar saldo). Também coloquei opção para ele responder uma pergunta qualquer, que é a funcionalidade principal requerida no desafio. 
 O bot responde perguntas verificando diretamente das perguntas existentes (que estão mokadas). Para uma funcionaldiade real, daria pra usar um banco de dados vetorial para armazenar diferentes perguntas e respostas. Quando o usuário fizesse uma nova pergunta, verificaria a similaridade no espaço vetorial para buscar a resposta mais relevante. Também daria pra usar isso em conjunto com um LLM para passar as respostas mais similares para o contexto do LLM e responder uma resposta ainda mais precisa (técnica de RAG). É algo que eu implementei no meu TCC.
@@ -246,5 +315,5 @@ O que eu fiz foi:
  - usei o certbot para obter os certificados https do subdomínio
  - configurei o nginx
 
- ### Consideração sobre o login
-Nesse projeto, decidi que o login seria feito por CPF, por se tratar de um gerenciamento de documentos em um sistema de serviço público. Contudo, na interface do Swagger, para funcionar o OAuth através do botão no canto direito superior da página, é necessário que o nome dos parâmetros do login sejam "username" e "password". Por esse motivo talvez acabe gerando um pequena confusão, pois não fica tão claro que deve ser inserido o CPF.
+### Observabilidade
+Decidi implementar um esboço de observabilidade hoje eu costumo implementar ao iniciar APIs. É muito comum finalizar um sistema, ir para produção, aparecerem problemas e os usuários não saberem explicar muito bem qual é o problema, muito menos como reproduzir. A observabilidade resolve isso pois permite identificar em tempo real, o que economiza bastante tempo que seria basta tendo que debugar o código para tentar entender o que ocorreu.
