@@ -316,4 +316,4 @@ O que eu fiz foi:
  - configurei o nginx
 
 ### Observabilidade
-Decidi implementar um esboço de observabilidade hoje eu costumo implementar ao iniciar APIs. É muito comum finalizar um sistema, ir para produção, aparecerem problemas e os usuários não saberem explicar muito bem qual é o problema, muito menos como reproduzir. A observabilidade resolve isso pois permite identificar em tempo real, o que economiza bastante tempo que seria basta tendo que debugar o código para tentar entender o que ocorreu.
+Decidi implementar um esboço de observabilidade pois hoje eu costumo implementar ao iniciar APIs. É muito comum finalizar um sistema, ir para produção, aparecerem problemas e os usuários não saberem explicar muito bem qual é o problema, muito menos como reproduzir. A observabilidade resolve isso pois permite identificar em tempo real, o que economiza bastante tempo que seria basta tendo que debugar o código para tentar entender o que ocorreu.
