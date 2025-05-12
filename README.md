@@ -28,7 +28,11 @@ Agora, crie um arquivo .env e copie o conteúdo do .env.example
 ```console
 docker-compose -f docker-compose.dev.yml up --build
 ```
-Esse comando irá subir o banco de dados e a API, que estará disponível localmente na porta **8000**
+Aguarde aparecer a mensagem `INFO:     Application startup complete.`
+
+Esse comando irá subir o Postgres, a API e o Jaeger (que será explicado mais adiante)
+
+A API estará disponível localmente na porta **8000**
 
 Obs: para testar o OAuth2 seria necessário preencher os valores do .env referente ao Google e Meta com valores reais. Durante o desenvolvimento do case, criei um projeto/app no Google/Meta para obter as credenciais. Mas não adiantaria eu colocar elas no example pois, como não está em produção, eu precisaria adicionar o email do testador no painel, senão daria "App não disponível". De qualquer forma, coloquei prints no README mostrando o funcionamento do OAuth2.
 

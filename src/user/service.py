@@ -4,50 +4,62 @@ from .models import User
 from .schemas import UserResponse, UserUpdate
 from datetime import datetime
 from passlib.context import CryptContext
+from opentelemetry import trace
+from src.logging.logger import logger
 
 from ..transport.service import create_transport_card
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+tracer = trace.get_tracer(__name__)
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 async def create_user(user_create):
-    exists = await User.filter(cpf=user_create.cpf).exists() or \
-             await User.filter(email=user_create.email).exists()
+    logger.info(f"Iniciando criação de usuário: {user_create.email}")
+    
+    with tracer.start_as_current_span("create_user"):
+        exists = await User.filter(cpf=user_create.cpf).exists() or \
+                await User.filter(email=user_create.email).exists()
 
-    if exists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="CPF ou e-mail já cadastrado."
-    )
-        
-    try:
-        user = await User.create(
-            full_name=user_create.full_name,
-            email=user_create.email,
-            password=hash_password(user_create.password),
-            birth_date=user_create.birth_date,
-            cpf=user_create.cpf,
-            phone=user_create.phone
+        if exists:
+            logger.warning(f"Usuário já existe com CPF {user_create.cpf} ou email {user_create.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="CPF ou e-mail já cadastrado."
         )
-        
-        await create_transport_card(user.id)
-        return UserResponse(
-            id=user.id,
-            full_name=user.full_name,
-            email=user.email,
-            birth_date=user.birth_date,
-            cpf=user.cpf,
-            phone=user.phone,
-            created_at=str(user.created_at) if user.created_at else "",
-            updated_at=str(user.updated_at) if user.updated_at else ""
-        )
-    except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Erro de integridade ao criar usuário."
-        )
+            
+        try:
+            user = await User.create(
+                full_name=user_create.full_name,
+                email=user_create.email,
+                password=hash_password(user_create.password),
+                birth_date=user_create.birth_date,
+                cpf=user_create.cpf,
+                phone=user_create.phone
+            )
+            logger.info(f"Usuário criado com sucesso: id={user.id}, email={user.email}")
+            
+            await create_transport_card(user.id)
+            logger.info(f"Cartão de transporte criado para usuário id={user.id}")
+            
+            return UserResponse(
+                id=user.id,
+                full_name=user.full_name,
+                email=user.email,
+                birth_date=user.birth_date,
+                cpf=user.cpf,
+                phone=user.phone,
+                created_at=str(user.created_at) if user.created_at else "",
+                updated_at=str(user.updated_at) if user.updated_at else ""
+            )
+        except IntegrityError as e:
+            logger.error(f"Erro de integridade ao criar usuário: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Erro de integridade ao criar usuário."
+            )
 
 async def get_user(user_id: int):
     user = await User.filter(id=user_id).first()

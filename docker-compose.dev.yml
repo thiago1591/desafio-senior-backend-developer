@@ -30,5 +30,18 @@ services:
     volumes:
       - .:/app
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    container_name: jaeger
+    ports:
+      - "16686:16686"   
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "14250:14250"
+      - "4317:4317" 
+      - "4318:4318"  
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
 volumes:
   postgres_data:

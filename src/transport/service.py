@@ -6,6 +6,9 @@ import secrets
 from .models import TransportCard, TransportTransactionHistory
 from .schemas import RechargeRequest
 from ..documents.exceptions import UserNotOwner
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
 
 async def recharge_card(card_number: str, amount: int, user_id: str):
 
@@ -74,17 +77,18 @@ async def get_user_cards(user_id: int):
 
 async def create_transport_card(user_id: int) -> TransportCard:
     #tenta gerar um código único de cartão até achar um que é único
-    while True:
-        card_number = ''.join(secrets.choice('0123456789') for _ in range(16))
-        existing_card = await TransportCard.get_or_none(card_number=card_number)
-        if not existing_card:
-            break
-    
-    card = await TransportCard.create(
-        user_id=user_id,
-        card_number=card_number,
-        balance=0.00,
-        status='active'
-    )
-    
-    return card
+    with tracer.start_as_current_span("create_transport_card"):
+        while True:
+            card_number = ''.join(secrets.choice('0123456789') for _ in range(16))
+            existing_card = await TransportCard.get_or_none(card_number=card_number)
+            if not existing_card:
+                break
+        
+        card = await TransportCard.create(
+            user_id=user_id,
+            card_number=card_number,
+            balance=0.00,
+            status='active'
+        )
+        
+        return card

@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from src.database import init_tortoise
+from src.otel_setup import configure_tracer
 from src.routes import api_router
 
 app = FastAPI()
+configure_tracer(app)
 
 init_tortoise(app)
 
