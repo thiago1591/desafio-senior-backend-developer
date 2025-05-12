@@ -1,4 +1,4 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 import re
 from starlette.status import HTTP_400_BAD_REQUEST
 from fastapi import APIRouter, Form, Request

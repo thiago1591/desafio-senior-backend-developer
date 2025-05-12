@@ -22,19 +22,17 @@ async def test_get_user_cards_successfully(client: AsyncClient):
     assert response.status_code == status.HTTP_201_CREATED
     user_data = response.json()
 
-    login_payload = {
-        "cpf": user_payload["cpf"],
+    login_response = await client.post("/auth/login", data={
+        "username": user_payload["cpf"],
         "password": user_payload["password"]
-    }
-    login_response = await client.post("/auth/login", json=login_payload) 
+    })
     assert login_response.status_code == status.HTTP_200_OK
     login_data = login_response.json()
 
     token = login_data.get("access_token")
-    assert token is not None, "Token não encontrado na resposta de login"
+    assert token is not None
 
     response = await client.get("/transport-card/my-cards", headers={"Authorization": f"Bearer {token}"})
-    
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
@@ -64,19 +62,16 @@ async def test_get_card_balance_successfully(client: AsyncClient):
     response = await client.post("/users/register", json=user_payload)
     assert response.status_code == status.HTTP_201_CREATED
 
-    login_payload = {
-        "cpf": user_payload["cpf"],
+    login_response = await client.post("/auth/login", data={
+        "username": user_payload["cpf"],
         "password": user_payload["password"]
-    }
-    login_response = await client.post("/auth/login", json=login_payload)
+    })
     assert login_response.status_code == status.HTTP_200_OK
     login_data = login_response.json()
 
     token = login_data.get("access_token")
-    assert token is not None, "Token não encontrado na resposta de login"
-
-    print(f"Token: {token}") 
-    assert isinstance(token, str) and len(token) > 0, "Token inválido"
+    assert token is not None
+    assert isinstance(token, str) and len(token) > 0
 
     response = await client.get(
         "/transport-card/my-cards",
@@ -100,7 +95,6 @@ async def test_get_card_balance_successfully(client: AsyncClient):
     assert isinstance(balance, int)
     assert balance == card["balance"]
 
-
 @pytest.mark.anyio
 @pytest.mark.integration
 async def test_recharge_card_successfully(client: AsyncClient):
@@ -117,16 +111,16 @@ async def test_recharge_card_successfully(client: AsyncClient):
     response = await client.post("/users/register", json=user_payload)
     assert response.status_code == status.HTTP_201_CREATED
 
-    login_payload = {
-        "cpf": user_payload["cpf"],
+    login_response = await client.post("/auth/login", data={
+        "username": user_payload["cpf"],
         "password": user_payload["password"]
-    }
-    login_response = await client.post("/auth/login", json=login_payload)
+    })
     assert login_response.status_code == status.HTTP_200_OK
     login_data = login_response.json()
 
     token = login_data.get("access_token")
-    assert token is not None, "Token não encontrado na resposta de login"
+    assert token is not None
+    assert isinstance(token, str) and len(token) > 0
 
     response = await client.get(
         "/transport-card/my-cards",
@@ -142,7 +136,7 @@ async def test_recharge_card_successfully(client: AsyncClient):
     current_balance = card["balance"]
 
     recharge_payload = {
-        "amount": 100 
+        "amount": 100
     }
 
     response = await client.post(
@@ -150,7 +144,6 @@ async def test_recharge_card_successfully(client: AsyncClient):
         json=recharge_payload,
         headers={"Authorization": f"Bearer {token}"}
     )
-
     assert response.status_code == status.HTTP_200_OK
     recharge_data = response.json()
 
@@ -163,7 +156,6 @@ async def test_recharge_card_successfully(client: AsyncClient):
         f"/transport-card/{card_number}/balance",
         headers={"Authorization": f"Bearer {token}"}
     )
-
     assert response.status_code == status.HTTP_200_OK
     balance = response.json()
     assert balance == current_balance + recharge_payload["amount"]
@@ -184,11 +176,10 @@ async def test_debit_card_successfully(client: AsyncClient):
     response = await client.post("/users/register", json=user_payload)
     assert response.status_code == status.HTTP_201_CREATED
 
-    login_payload = {
-        "cpf": user_payload["cpf"],
+    login_response = await client.post("/auth/login", data={
+        "username": user_payload["cpf"],
         "password": user_payload["password"]
-    }
-    login_response = await client.post("/auth/login", json=login_payload)
+    })
     assert login_response.status_code == status.HTTP_200_OK
     login_data = login_response.json()
 
@@ -209,16 +200,16 @@ async def test_debit_card_successfully(client: AsyncClient):
     current_balance = card["balance"]
 
     debit_payload = {
-        "amount": 100 
+        "amount": 100
     }
 
-    if current_balance >= debit_payload["amount"]:
-        response = await client.post(
-            f"/transport-card/{card_number}/debit",
-            json=debit_payload,
-            headers={"Authorization": f"Bearer {token}"}
-        )
+    response = await client.post(
+        f"/transport-card/{card_number}/debit",
+        json=debit_payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
 
+    if current_balance >= debit_payload["amount"]:
         assert response.status_code == status.HTTP_200_OK
         debit_data = response.json()
 
@@ -231,17 +222,10 @@ async def test_debit_card_successfully(client: AsyncClient):
             f"/transport-card/{card_number}/balance",
             headers={"Authorization": f"Bearer {token}"}
         )
-
         assert response.status_code == status.HTTP_200_OK
         balance = response.json()
         assert balance == current_balance - debit_payload["amount"]
     else:
-        response = await client.post(
-            f"/transport-card/{card_number}/debit",
-            json=debit_payload,
-            headers={"Authorization": f"Bearer {token}"}
-        )
-
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         error_data = response.json()
         assert error_data["detail"] == "Saldo insuficiente para realizar o débito"
