@@ -30,7 +30,7 @@ docker-compose -f docker-compose.dev.yml up --build
 ```
 Esse comando irá subir o banco de dados e a API, que estará disponível localmente na porta **8000**
 
-Obs: para testar o OAuth2 seria necessário preencher os valores referente ao Google e Meta com valores reais. Durante o desenvolvimento do case, criei um projeto/app no Google/Meta para obter as credenciais. Mas não adiantaria eu colocar elas no example pois, como não está em produção, eu precisaria adicionar o email do testador no painel, senão daria "App não disponível". De qualquer forma, coloquei prints no README mostrando o funcionamento do OAuth2.
+Obs: para testar o OAuth2 seria necessário preencher os valores do .env referente ao Google e Meta com valores reais. Durante o desenvolvimento do case, criei um projeto/app no Google/Meta para obter as credenciais. Mas não adiantaria eu colocar elas no example pois, como não está em produção, eu precisaria adicionar o email do testador no painel, senão daria "App não disponível". De qualquer forma, coloquei prints no README mostrando o funcionamento do OAuth2.
 
 ## Documentação
 A API está documentada no Swagger, acessando a rota [/docs](http://localhost:8000/docs)
@@ -110,7 +110,7 @@ docker exec -it desafio-senior-backend-developer-api-1 sh -c "TESTING=1 pytest -
 │   │   │   ├── test_user_service.py
 
 ```
-
+Foram criados 19 testes unitários e e 18 testes de integração, totalizando 37 testes, que cobrem todas as funcionalidades exceto o chabot. Os testes testam tanto o caminho feliz quanto caminhos secundários.
 
 ## 🔹 Funcionalidades
 
@@ -138,6 +138,48 @@ docker exec -it desafio-senior-backend-developer-api-1 sh -c "TESTING=1 pytest -
     - Salvar documento (iniciado mas não finalizado)
 
 ## OAuth2
+
+## Rota de saúde
+
+## Bot
+Abaixo está um diagrama que mostra em mais detalhes as funcionalidades do bot
+
+Explicando mais tecnicamente, o bot tem 2 endpoints disponíveis:
+ - /chatbot/start
+ - /chatbot/chat
+
+O endpoint /chatbot/start é usado apenas para listar a lista de opções do bot na primeira mensagem. É importante pois o segundo endpoint, supoe que o usuário já escolheu o número de uma opção disponível.
+
+O endpoint  /chatbot/chat recebe o token (com o user_id) e o input do usuário. Nas etapas principais, o input do usuário será um número com a opção. 
+Nesse momento, será chamada a camada de intent_dispatcher com o estado atual (que será criado se ainda não existir) e o input do usuário. Essa camada será responsável por direcionar o fluxo para a intenção correspondente do usuário.
+
+Mas o que é o estado atual? 
+
+Foi criada uma tabela chamada `ChatbotState`. 
+
+imagem aqui
+
+O objetivo dessa tabela, é permitir que o sistema crie uma máquina de estados, de forma que, quando o usuário interagir, o sistema "lembre" em que parte do fluxo ele está.
+
+Por exemplo. Se o usuário quer consultar o saldo, ele digita a opção correspondente e recebe o saldo. Nesse caso o fluxo não tem mais de 1 interação, então não precisa salvar o estado.
+
+Por outro lado, se o usuário quer fazer uma pergunta geral, ele escolhe a opção correspondente. Após isso, ele irá enviar outra requisição com a pergunta. Nesse caso, é preciso ter um estado salvo para "lembrar" que a última interação foi o usuário escolhendo que quer fazer uma pergunta e que o fluxo atual está recebendo a pergunta
+
+```
+├── chatbot
+│   ├── services
+│   │   │   intent_handlers
+│   │   │   ├── handle_cancel_card.py
+│   │   │   ├── handle_check_balance.py
+│   │   │   ├── handle_find_my_documents.py
+│   │   │   ├── handle_question.py
+│   │   │   ├── handle_save_document.py #não finalizado
+│   │   ├── intent_dispatcher.py
+│   ├── router.py
+│   ├── models.py
+│   ├── state_manager.py
+│   ├── ...
+```
 
 ## Separação dos ambientes
 O projeto possui 2 ambientes: dev e prod. Foram criados 2 Dockerfiles e 2 Docker Composes. Nesse README, os comandos já instruem para rodar corretamente o ambiente de dev, para testar localmente. As configurações de produção foram utilizadas no deploy do projeto, que serão discutidas mais detalhadamente da seção de discussões de decisões.
@@ -187,7 +229,7 @@ As principais vantagens são:
 Decidi criar um módulo separado para a recuperação de senha pois é o que eu faria em uma API real. Criei alguns endpoints para simular como seria o fluxo e coloquei um comentário onde seria a comunicação com o serviço externo (SMS ou Email) para envio do código de recuperação. Por conta do tempo acabei não finalizando essa módulo. 
 
 ### ChatBOT
-A funcionalidade do chatbot acredito que seja a funcionalidade desse desafio que poderia seguir diferentes caminhos. Eu achei que seria legal para o contexto desse desafio, usar o chatbot para realizar algumas das funcionalidades dos outros módulos. Também coloquei opção para ele responder uma pergunta, que é a funcionalidade principal requerida no desafio. 
+A funcionalidade do chatbot acredito que seja a funcionalidade desse desafio que poderia seguir diferentes caminhos. Eu achei que seria legal para o contexto desse desafio, usar o chatbot para realizar algumas das funcionalidades dos outros módulos (como consultar saldo). Também coloquei opção para ele responder uma pergunta qualquer, que é a funcionalidade principal requerida no desafio. 
 O bot responde perguntas verificando diretamente das perguntas existentes (que estão mokadas). Para uma funcionaldiade real, daria pra usar um banco de dados vetorial para armazenar diferentes perguntas e respostas. Quando o usuário fizesse uma nova pergunta, verificaria a similaridade no espaço vetorial para buscar a resposta mais relevante. Também daria pra usar isso em conjunto com um LLM para passar as respostas mais similares para o contexto do LLM e responder uma resposta ainda mais precisa (técnica de RAG). É algo que eu implementei no meu TCC.
 
 ### Deploy
@@ -197,7 +239,8 @@ O que eu fiz foi:
  - clonei o repo na máquina
  - rodei o docker de produção e configurei o env
  - cadastrei o subdomínio api.iplan.thiagoandre.dev no registrobr
- - configurei o certbot para certificar o https
+ - usei o certbot para obter os certificados https do subdomínio
+ - configurei o nginx
 
  ### Consideração sobre o login
 Nesse projeto, decidi que o login seria feito por CPF, por se tratar de um gerenciamento de documentos em um sistema de serviço público. Contudo, na interface do Swagger, para funcionar o OAuth através do botão no canto direito superior da página, é necessário que o nome dos parâmetros do login sejam "username" e "password". Por esse motivo talvez acabe gerando um pequena confusão, pois não fica tão claro que deve ser inserido o CPF.
