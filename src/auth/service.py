@@ -33,6 +33,6 @@ async def authenticate_user(cpf: str, password: str):
     return user
 
 async def login_user(user_login: UserLogin):
-    user = await authenticate_user(user_login.cpf, user_login.password)
+    user = await authenticate_user(user_login.username, user_login.password)
     access_token = create_access_token(data={"sub": user.cpf, "user_id": user.id})
     return UserLoginResponse(access_token=access_token, user_id=user.id, cpf=user.cpf)

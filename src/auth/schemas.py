@@ -3,10 +3,10 @@ from pydantic import BaseModel, field_validator, Field
 from src.auth.utils import is_valid_cpf 
 
 class UserLogin(BaseModel):
-    cpf: str = Field(..., example="77042986075")
-    password: str = Field(..., example="T@ntofaz1590force")
+    username: str = Field(..., example="12345678909")
+    password: str = Field(..., example="senhaSegura123")
 
-    @field_validator('cpf')
+    @field_validator('username')
     @classmethod
     def validate_cpf(cls, v: str) -> str:
         if not is_valid_cpf(v):

@@ -15,6 +15,14 @@ class AuthConfig(BaseSettings):
     REFRESH_TOKEN_KEY: str
 
     SECURE_COOKIES: bool = True
+    
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GOOGLE_REDIRECT_URI: str
+    
+    META_CLIENT_ID: str
+    META_CLIENT_SECRET: str
+    META_REDIRECT_URI: str
 
     class Config:
         env_file = ".env"

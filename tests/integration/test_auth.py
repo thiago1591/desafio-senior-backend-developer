@@ -21,7 +21,7 @@ async def test_login_successfully(client: AsyncClient):
     assert response.status_code == status.HTTP_201_CREATED
 
     login_payload = {
-        "cpf": user_payload["cpf"],
+        "username": user_payload["cpf"],
         "password": user_payload["password"]
     }
 
